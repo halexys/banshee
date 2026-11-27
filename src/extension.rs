@@ -8,7 +8,9 @@ use std::process::Command;
 pub const UUID: &str = "banshee@halexys.dev";
 /// The same extension under the app's previous name; removed on start.
 const OLD_UUID: &str = "ghostdeck@halexys.dev";
-const FILES: [(&str, &str); 3] = [
+const FILES: [(&str, &str); 5] = [
+    ("fan-symbolic.svg", include_str!("../extension/fan-symbolic.svg")),
+    ("curve-symbolic.svg", include_str!("../extension/curve-symbolic.svg")),
     ("metadata.json", include_str!("../extension/metadata.json")),
     ("extension.js", include_str!("../extension/extension.js")),
     ("banshee-symbolic.svg", include_str!("../extension/banshee-symbolic.svg")),

@@ -23,6 +23,17 @@ struct App {
     /// last time the GNOME extension polled us (it then owns the top-bar icon)
     ext_seen: Mutex<Option<std::time::Instant>>,
     tray_hidden: std::sync::atomic::AtomicBool,
+    /// extension connections waiting for OSD events
+    osd_subs: Mutex<Vec<std::os::unix::net::UnixStream>>,
+}
+
+impl App {
+    /// One OSD line to every listening extension (dead connections are dropped).
+    fn osd(&self, icon: &str, text: &str) {
+        use std::io::Write;
+        let line = format!("{}\n", serde_json::json!({ "icon": icon, "text": text }));
+        self.osd_subs.lock().unwrap().retain_mut(|s| s.write_all(line.as_bytes()).is_ok());
+    }
 }
 
 type Shared = Arc<App>;
@@ -150,6 +161,23 @@ fn run_action<R: Runtime>(app: &AppHandle<R>, action: &str) -> Result<(), String
         _ => Err(format!("unknown action {action}")),
     };
     refresh_ui(app, &st);
+    // quick on-screen confirmation of what the shortcut did
+    let s = st.status.lock().unwrap().clone();
+    match &res {
+        Err(e) => st.osd("error", e),
+        Ok(()) => match action {
+            "cycle" => st.osd("profile", s.profile.map(|p| p.name()).unwrap_or("Personalizado")),
+            a if a.starts_with("profile:") => st.osd("profile", s.profile.map(|p| p.name()).unwrap_or("Personalizado")),
+            "boost" => st.osd("boost", if s.cooler_boost { "Fan Boost activado" } else { "Fan Boost desactivado" }),
+            "curve" => {
+                let c = st.cfg.lock().unwrap();
+                let on = s.profile.map(|p| c.curve_for(p)).unwrap_or(false);
+                let name = s.profile.map(|p| p.name()).unwrap_or("");
+                st.osd("curve", &if on { format!("Curva propia · {name}") } else { format!("Curva de fábrica · {name}") });
+            }
+            _ => {}
+        },
+    }
     res
 }
 
@@ -568,6 +596,12 @@ fn serve_instance<R: Runtime>(app: AppHandle<R>, l: std::os::unix::net::UnixList
                     };
                     let _ = s.write_all(reply.as_bytes());
                 }
+                "events" => {
+                    let st = app.state::<Shared>().inner().clone();
+                    let _ = s.set_read_timeout(None);
+                    let _ = s.set_write_timeout(Some(Duration::from_millis(500)));
+                    st.osd_subs.lock().unwrap().push(s);
+                }
                 "state" => {
                     let st = app.state::<Shared>().inner().clone();
                     *st.ext_seen.lock().unwrap() = Some(std::time::Instant::now());
@@ -609,6 +643,7 @@ fn main() {
         cfg: Mutex::new(cfg),
         ext_seen: Mutex::new(None),
         tray_hidden: std::sync::atomic::AtomicBool::new(false),
+        osd_subs: Mutex::new(Vec::new()),
     });
     extension::install();
     let first = shared.resample();

@@ -3,7 +3,8 @@
 // GNOME's AppIndicator support opens a plain menu on click and never tells the app; this
 // button instead asks Banshee (over its Unix socket) to toggle the quick panel, and moves
 // that window right under the icon. It also shows CPU/GPU temperatures coloured by
-// threshold, and notifies when either stays very hot.
+// threshold, notifies when either stays very hot, and shows GNOME's own OSD when a shortcut or
+// the scenario key changes something.
 
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
@@ -91,10 +92,65 @@ class BansheeButton extends PanelMenu.Button {
         // The panel window is (re)created on every show: place it the moment it appears.
         this._winId = global.display.connect('window-created', (_d, win) => this._place(win));
         this._poll();
+        this._listen();
         this._timer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, POLL_SECONDS, () => {
             this._poll();
             return GLib.SOURCE_CONTINUE;
         });
+    }
+
+    // Long-lived "events" connection: Banshee writes one JSON line per action to show as OSD.
+    _listen() {
+        if (this._destroyed)
+            return;
+        const client = new Gio.SocketClient();
+        client.connect_async(Gio.UnixSocketAddress.new(sockPath()), null, (c, res) => {
+            try {
+                this._evConn = c.connect_finish(res);
+                this._evConn.get_output_stream().write_all(new TextEncoder().encode('events\n'), null);
+                const din = new Gio.DataInputStream({base_stream: this._evConn.get_input_stream()});
+                const next = () => din.read_line_async(GLib.PRIORITY_DEFAULT, null, (d, r) => {
+                    let line = null;
+                    try {
+                        [line] = d.read_line_finish_utf8(r);
+                    } catch (e) {}
+                    if (line === null) {
+                        this._retryListen();
+                        return;
+                    }
+                    try {
+                        this._osd(JSON.parse(line));
+                    } catch (e) {}
+                    next();
+                });
+                next();
+            } catch (e) {
+                this._retryListen();
+            }
+        });
+    }
+
+    _retryListen() {
+        try {
+            this._evConn?.close(null);
+        } catch (e) {}
+        this._evConn = null;
+        if (this._destroyed || this._retryId)
+            return;
+        this._retryId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 3, () => {
+            this._retryId = 0;
+            this._listen();
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    _osd(ev) {
+        const file = {boost: 'fan-symbolic.svg', curve: 'curve-symbolic.svg'}[ev.icon] ?? 'banshee-symbolic.svg';
+        const icon = ev.icon === 'error'
+            ? Gio.ThemedIcon.new('dialog-warning-symbolic')
+            : Gio.icon_new_for_string(GLib.build_filenamev([this._ext.path, file]));
+        Main.osdWindowManager.showAll(icon, ev.text, null, null);
+        this._poll();   // icon colour follows right away
     }
 
     _toggle() {
@@ -176,6 +232,12 @@ class BansheeButton extends PanelMenu.Button {
     }
 
     destroy() {
+        this._destroyed = true;
+        if (this._retryId)
+            GLib.source_remove(this._retryId);
+        try {
+            this._evConn?.close(null);
+        } catch (e) {}
         if (this._timer)
             GLib.source_remove(this._timer);
         this._timer = 0;
