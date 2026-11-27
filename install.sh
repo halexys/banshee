@@ -20,7 +20,7 @@ Name=Banshee
 Comment=Perfiles, ventiladores y batería de la MSI Prestige 16
 Exec=$BIN $1
 Icon=banshee
-Categories=System;Settings;HardwareSettings;
+Categories=Settings;HardwareSettings;
 Terminal=false
 StartupWMClass=banshee
 EOF
