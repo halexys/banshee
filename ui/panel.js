@@ -42,3 +42,11 @@ $("#ppanic").addEventListener("click", () => act("panic_reset", {}));
 async function poll() { try { render(await invoke("get_status")); } catch (e) {} }
 poll();
 setInterval(poll, 1000);
+
+// keys inside the quick panel
+document.addEventListener("keydown", (e) => {
+  const P = ["silent", "balanced", "extreme", "superbatt"];
+  if (e.key === "Escape") window.__TAURI__.window.getCurrentWindow().hide();
+  else if (e.key >= "1" && e.key <= "4") act("set_profile", { id: P[Number(e.key) - 1] });
+  else if (e.key === "b" || e.key === "B") act("set_boost", { on: !view?.status.cooler_boost });
+});

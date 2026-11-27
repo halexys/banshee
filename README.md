@@ -18,6 +18,10 @@ Panel de control para el **MSI Prestige 16 AI Studio B1VFG** (EC `15A2EMS1`) en 
 - **Barra de GNOME**: extensión propia (va dentro del binario) con el banshee del color del perfil,
   temperaturas con aviso de color y notificación si CPU/GPU pasan de 90 °C durante 10 s. Un clic abre el
   panel rápido. Sin GNOME, icono de bandeja normal.
+- **Atajos globales** (pantalla Atajos o Ajustes → Teclado de GNOME): siguiente perfil, cada perfil, Fan Boost,
+  curva propia, panel rápido. Por defecto Ctrl+Alt+P, Ctrl+Alt+1…4, Ctrl+Alt+B, Ctrl+Alt+C y Super+G.
+- **Tecla de escenario F7** (experimental): cambia de perfil. En Linux no llega como tecla (msi_wmi no conoce el
+  evento), así que Banshee la detecta en el registro del kernel.
 - Restaura perfil, curva, límite y teclado al arrancar y al volver de suspensión.
 
 ## Requisitos
@@ -42,7 +46,8 @@ usuario permiso sobre los atributos de msi-ec y la opción `debug=1` del módulo
 ```sh
 banshee --status                  # estado en JSON
 banshee --profile silent|balanced|extreme|superbatt
-banshee --cycle                   # siguiente perfil (para un atajo de teclado)
+banshee --cycle                     # siguiente perfil
+banshee --boost | --curve | --panel # Fan Boost, curva propia, panel rápido (pasan por la app abierta)
 ```
 
 ## Aviso

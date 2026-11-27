@@ -131,11 +131,26 @@ async function poll() {
 }
 
 // wiring
-$$(".rail button").forEach((el) => el.addEventListener("click", () => {
-  $$(".rail button").forEach((b) => b.classList.toggle("on", b === el));
-  $("#view-home").hidden = el.dataset.view !== "home";
-  $("#view-fans").hidden = el.dataset.view !== "fans";
-}));
+const VIEWS = ["home", "fans", "keys"];
+function showView(name) {
+  $$(".rail button").forEach((b) => b.classList.toggle("on", b.dataset.view === name));
+  VIEWS.forEach((v) => ($(`#view-${v}`).hidden = v !== name));
+  window.dispatchEvent(new CustomEvent("view", { detail: name }));
+}
+$$(".rail button").forEach((el) => el.addEventListener("click", () => showView(el.dataset.view)));
+
+// keys with the window focused (not while a shortcut is being recorded)
+document.addEventListener("keydown", (e) => {
+  if (window.capturingShortcut || e.ctrlKey || e.altKey || e.metaKey) return;
+  const cur = VIEWS.find((v) => !$(`#view-${v}`).hidden) || "home";
+  const P = ["silent", "balanced", "extreme", "superbatt"];
+  if (e.key >= "1" && e.key <= "4") act("set_profile", { id: P[Number(e.key) - 1] });
+  else if (e.key === "b" || e.key === "B") act("set_boost", { on: !view?.status.cooler_boost });
+  else if (e.key === "?") showView("keys");
+  else if (e.key === "Tab") { e.preventDefault(); showView(VIEWS[(VIEWS.indexOf(cur) + (e.shiftKey ? 2 : 1)) % 3]); }
+  else return;
+  e.preventDefault();
+});
 $$(".profile").forEach((el) => el.addEventListener("click", () => act("set_profile", { id: el.dataset.p })));
 $("#boost").addEventListener("click", () => act("set_boost", { on: !view?.status.cooler_boost }));
 $$("#kbd button").forEach((el) => el.addEventListener("click", () => act("set_kbd", { level: Number(el.dataset.v) })));

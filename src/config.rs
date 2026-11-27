@@ -19,6 +19,10 @@ pub struct Config {
     /// Profiles that run `curve` instead of MSI's table. Silent never does: its fan byte (0x1D)
     /// is what makes it silent, and advanced mode would replace it.
     pub curve_profiles: Vec<Profile>,
+    /// MSI scenario key (F7) cycles the profile (experimental, see keys.rs)
+    pub scenario_key: bool,
+    /// default GNOME shortcuts already written once
+    pub shortcuts_installed: bool,
 }
 
 impl Default for Config {
@@ -31,6 +35,8 @@ impl Default for Config {
             restore_on_start: true,
             curve: hw::FACTORY,
             curve_profiles: Vec::new(),
+            scenario_key: true,
+            shortcuts_installed: false,
         }
     }
 }

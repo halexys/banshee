@@ -4,6 +4,7 @@
 mod config;
 mod extension;
 mod hw;
+mod keys;
 mod setup;
 mod tray;
 
@@ -106,6 +107,50 @@ pub fn on_tray_menu<R: Runtime>(app: &AppHandle<R>, id: &str) {
         eprintln!("tray action {id}: {e}");
     }
     refresh_ui(app, &st);
+}
+
+/// Actions shared by global shortcuts, the scenario key and `banshee --<action>`.
+fn run_action<R: Runtime>(app: &AppHandle<R>, action: &str) -> Result<(), String> {
+    let st = app.state::<Shared>().inner().clone();
+    let res = match action {
+        "cycle" => {
+            let cur = hw::current_profile().unwrap_or(st.cfg.lock().unwrap().profile);
+            st.set_profile(cur.next())
+        }
+        "boost" => {
+            let on = st.resample().cooler_boost;
+            hw::set_cooler_boost(!on)
+        }
+        "curve" => {
+            let p = hw::current_profile().ok_or("perfil desconocido")?;
+            if p == Profile::Silent {
+                return Err("Silencioso usa siempre la curva de fábrica".into());
+            }
+            let mut c = st.cfg.lock().unwrap();
+            let on = !c.curve_profiles.contains(&p);
+            c.curve_profiles.retain(|x| *x != p);
+            if on {
+                c.curve_profiles.push(p);
+            }
+            c.save();
+            c.sync_fans(p)
+        }
+        "panel" => {
+            let h = app.clone();
+            app.run_on_main_thread(move || tray::toggle_panel(&h)).map_err(|e| e.to_string())
+        }
+        "show" => {
+            let h = app.clone();
+            app.run_on_main_thread(move || tray::show_main(&h)).map_err(|e| e.to_string())
+        }
+        a if a.starts_with("profile:") => match Profile::from_id(&a[8..]) {
+            Some(p) => st.set_profile(p),
+            None => Err("unknown profile".into()),
+        },
+        _ => Err(format!("unknown action {action}")),
+    };
+    refresh_ui(app, &st);
+    res
 }
 
 // ---------- commands for the web UI ----------
@@ -233,6 +278,42 @@ fn set_curve_profile(app: AppHandle, st: State<Shared>, id: String, on: bool) ->
     Ok(view(&st))
 }
 
+#[derive(Serialize)]
+struct ShortcutsView {
+    items: Vec<keys::Shortcut>,
+    scenario_key: bool,
+}
+
+fn shortcuts_view(st: &App) -> ShortcutsView {
+    ShortcutsView { items: keys::get_all(), scenario_key: st.cfg.lock().unwrap().scenario_key }
+}
+
+#[tauri::command]
+async fn get_shortcuts(app: AppHandle) -> ShortcutsView {
+    shortcuts_view(&app.state::<Shared>())
+}
+
+#[tauri::command]
+async fn set_shortcut(app: AppHandle, id: String, accel: String) -> Result<ShortcutsView, String> {
+    keys::set(&id, &accel)?;
+    Ok(shortcuts_view(&app.state::<Shared>()))
+}
+
+#[tauri::command]
+fn set_scenario_key(st: State<Shared>, on: bool) -> ShortcutsView {
+    {
+        let mut c = st.cfg.lock().unwrap();
+        c.scenario_key = on;
+        c.save();
+    }
+    shortcuts_view(&st)
+}
+
+#[tauri::command]
+fn open_gnome_keys() {
+    keys::open_gnome_settings();
+}
+
 fn pkexec_self(args: &[&str]) -> Result<(), String> {
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
     let out = Command::new("pkexec").arg(exe).args(args).output().map_err(|e| format!("pkexec: {e}"))?;
@@ -337,9 +418,47 @@ fn spawn_poller<R: Runtime>(app: AppHandle<R>, st: Shared) {
 
 // ---------- CLI ----------
 
+/// Sends "do:<action>" to the running Banshee; false when there is none.
+fn send_action(action: &str) -> bool {
+    use std::io::{Read, Write};
+    let Ok(mut s) = std::os::unix::net::UnixStream::connect(sock_path()) else { return false };
+    let _ = s.set_read_timeout(Some(Duration::from_secs(5)));
+    if s.write_all(format!("do:{action}\n").as_bytes()).is_err() {
+        return false;
+    }
+    let mut r = String::new();
+    let _ = s.read_to_string(&mut r);
+    let r = r.trim();
+    if let Some(e) = r.strip_prefix("err:") {
+        eprintln!("banshee: {e}");
+    }
+    true
+}
+
 fn cli(args: &[String]) -> Option<i32> {
     let a = args.get(1)?.as_str();
+    let action = match a {
+        "--cycle" => Some("cycle".to_string()),
+        "--boost" => Some("boost".into()),
+        "--curve" => Some("curve".into()),
+        "--panel" => Some("panel".into()),
+        "--profile" => args.get(2).map(|p| format!("profile:{p}")),
+        _ => None,
+    };
+    if let Some(act) = &action {
+        if send_action(act) {
+            return Some(0);
+        }
+        if a == "--panel" {
+            return None; // not running: start normally (shows the window)
+        }
+    }
     let res: Result<(), String> = match a {
+        "--boost" => {
+            let on = std::fs::read_to_string(format!("{}/cooler_boost", hw::MSI)).map(|s| s.trim() == "on").unwrap_or(false);
+            hw::set_cooler_boost(!on)
+        }
+        "--curve" => Err("Banshee no está abierta".into()),
         "--setup" => setup::run(),
         "--gpu-mode" => match args.get(2).map(|s| s.as_str()) {
             Some("igpu") => hw::write_gpu_mode(true),
@@ -418,7 +537,7 @@ fn serve_instance<R: Runtime>(app: AppHandle<R>, l: std::os::unix::net::UnixList
         use std::io::{Read, Write};
         for mut s in l.incoming().flatten() {
             let _ = s.set_read_timeout(Some(Duration::from_millis(500)));
-            let mut buf = [0u8; 32];
+            let mut buf = [0u8; 64];
             let mut n = 0;
             while n < buf.len() {
                 match s.read(&mut buf[n..]) {
@@ -440,6 +559,14 @@ fn serve_instance<R: Runtime>(app: AppHandle<R>, l: std::os::unix::net::UnixList
                 "toggle" => {
                     let _ = app.run_on_main_thread(move || tray::toggle_panel(&h));
                     let _ = s.write_all(b"ok\n");
+                }
+                c if c.starts_with("do:") => {
+                    let act = c[3..].to_string();
+                    let reply = match run_action(&app, &act) {
+                        Ok(()) => "ok\n".to_string(),
+                        Err(e) => format!("err:{e}\n"),
+                    };
+                    let _ = s.write_all(reply.as_bytes());
                 }
                 "state" => {
                     let st = app.state::<Shared>().inner().clone();
@@ -489,13 +616,37 @@ fn main() {
     tauri::Builder::default()
         .manage(shared.clone())
         .invoke_handler(tauri::generate_handler![
-            get_status, open_main, panic_reset, set_profile, set_boost, set_kbd, set_charge, set_travel, set_fn, set_curve, set_curve_profile, set_gpu_mode, run_setup
+            get_status, open_main, panic_reset, set_profile, set_boost, set_kbd, set_charge, set_travel, set_fn, set_curve, set_curve_profile, get_shortcuts, set_shortcut, set_scenario_key, open_gnome_keys, set_gpu_mode, run_setup
         ])
         .setup(move |app| {
             let h = app.handle().clone();
             tray::create(&h, &first)?;
             spawn_poller(h.clone(), shared.clone());
             serve_instance(h.clone(), listener);
+            {
+                let st = shared.clone();
+                let first_run = !st.cfg.lock().unwrap().shortcuts_installed;
+                std::thread::spawn(move || {
+                    if first_run {
+                        keys::install_defaults();
+                        let mut c = st.cfg.lock().unwrap();
+                        c.shortcuts_installed = true;
+                        c.save();
+                    } else {
+                        keys::refresh_commands();
+                    }
+                });
+                let st2 = shared.clone();
+                let h2 = h.clone();
+                keys::watch_scenario_key(
+                    move || st2.cfg.lock().unwrap().scenario_key && hw::writable(),
+                    move || {
+                        if let Err(e) = run_action(&h2, "cycle") {
+                            eprintln!("scenario key: {e}");
+                        }
+                    },
+                );
+            }
             if !start_hidden {
                 tray::show_main(&h);
             }
