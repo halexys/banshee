@@ -1,0 +1,7 @@
+{
+  "uuid": "banshee@halexys.dev",
+  "name": "Banshee",
+  "description": "Icono de Banshee en la barra: un clic abre el panel rápido; temperaturas y avisos.",
+  "shell-version": ["46", "47", "48", "49", "50", "51"],
+  "url": "https://github.com/halexys"
+}

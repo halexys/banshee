@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banshee</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <svg class="logo" id="logo" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10a7 7 0 0 1 14 0v10l-2.5-2-2.3 2-2.2-2-2.2 2-2.3-2z"/><circle cx="9.5" cy="10.5" r="1"/><circle cx="14.5" cy="10.5" r="1"/></svg>
+    <span class="brand">BANSHEE</span>
+    <span class="chip" id="fw">PRESTIGE 16</span>
+    <span class="grow"></span>
+    <span class="power" id="power" aria-live="polite">
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0zM12 18v4"/></svg>
+      <span id="powerLabel">AC</span>
+    </span>
+  </header>
+
+  <div class="banner" id="banner" hidden>
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+    <span id="bannerText">Solo lectura</span>
+    <span class="grow"></span>
+    <button type="button" class="btn" id="setupBtn">Activar control</button>
+  </div>
+
+  <div class="body">
+  <nav class="rail" aria-label="Secciones">
+    <button type="button" class="on" data-view="home" aria-label="Inicio"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 13l4-4M3.5 17a9 9 0 1 1 17 0"/><circle cx="12" cy="13" r="1.5"/></svg></button>
+    <button type="button" data-view="fans" aria-label="Ventiladores"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M12 10c0-4 1-7 4-7s3 4-2 7M14 12c4 0 7 1 7 4s-4 3-7-2M12 14c0 4-1 7-4 7s-3-4 2-7M10 12c-4 0-7-1-7-4s4-3 7 2"/></svg></button>
+  </nav>
+
+  <main class="main" id="view-home">
+    <section class="gauges" aria-label="Estado">
+      <div class="gauge" data-g="cpu"><svg viewBox="0 0 80 80" aria-hidden="true"><circle class="track" cx="40" cy="40" r="34"/><circle class="arc" cx="40" cy="40" r="34" style="stroke:var(--orange)"/></svg>
+        <div class="gv"><div><span class="num">--</span><span class="unit">°C</span></div><span class="lbl">CPU</span><span class="sub">--</span></div></div>
+      <div class="gauge" data-g="gpu"><svg viewBox="0 0 80 80" aria-hidden="true"><circle class="track" cx="40" cy="40" r="34"/><circle class="arc" cx="40" cy="40" r="34" style="stroke:var(--blue)"/></svg>
+        <div class="gv"><div><span class="num">--</span><span class="unit">°C</span></div><span class="lbl">GPU</span><span class="sub">--</span></div></div>
+      <div class="gauge" data-g="fcpu"><svg viewBox="0 0 80 80" aria-hidden="true"><circle class="track" cx="40" cy="40" r="34"/><circle class="arc" cx="40" cy="40" r="34" style="stroke:var(--teal)"/></svg>
+        <div class="gv"><div><span class="num">--</span><span class="unit">rpm</span></div><span class="lbl">VENT. CPU</span><span class="sub">--</span></div></div>
+      <div class="gauge" data-g="fgpu"><svg viewBox="0 0 80 80" aria-hidden="true"><circle class="track" cx="40" cy="40" r="34"/><circle class="arc" cx="40" cy="40" r="34" style="stroke:var(--teal)"/></svg>
+        <div class="gv"><div><span class="num">--</span><span class="unit">rpm</span></div><span class="lbl">VENT. GPU</span><span class="sub">--</span></div></div>
+      <div class="gauge" data-g="bat"><svg viewBox="0 0 80 80" aria-hidden="true"><circle class="track" cx="40" cy="40" r="34"/><circle class="arc" cx="40" cy="40" r="34" style="stroke:var(--green)"/></svg>
+        <div class="gv"><div><span class="num">--</span><span class="unit">%</span></div><span class="lbl">BATERÍA</span><span class="sub">--</span></div></div>
+    </section>
+
+    <section class="profiles" id="profiles" aria-label="Perfil">
+      <button type="button" class="profile" data-p="silent" style="--c:var(--teal)">
+        <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 20A7 7 0 0 1 4 13c0-6 7-9 16-9 0 9-3 16-9 16zM4 20c4-4 7-6 10-8"/></svg>
+        <span class="pname">Silencioso</span><span class="pmeta">C1 · 1D</span></button>
+      <button type="button" class="profile" data-p="balanced" style="--c:var(--blue)">
+        <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M5 21h14M6 7h12M6 7l-3 7a3 3 0 0 0 6 0zM18 7l-3 7a3 3 0 0 0 6 0z"/></svg>
+        <span class="pname">Equilibrado</span><span class="pmeta">C1 · 0D</span></button>
+      <button type="button" class="profile" data-p="extreme" style="--c:var(--orange)">
+        <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>
+        <span class="pname">Extremo</span><span class="pmeta">C4 · turbo</span></button>
+      <button type="button" class="profile" data-p="superbatt" style="--c:var(--green)">
+        <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2M11 9l-2 3h3l-2 3"/></svg>
+        <span class="pname">Super Batería</span><span class="pmeta">C2 · 0F</span></button>
+    </section>
+
+    <section class="controls" aria-label="Controles">
+      <button type="button" class="boost" id="boost" aria-pressed="false">
+        <svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M12 10c0-4 1-7 4-7s3 4-2 7M14 12c4 0 7 1 7 4s-4 3-7-2M12 14c0 4-1 7-4 7s-3-4 2-7M10 12c-4 0-7-1-7-4s4-3 7 2"/></svg>
+        <span class="bt"><span class="bname">Fan Boost</span><span class="bsub" id="boostSub">OFF</span></span>
+      </button>
+
+      <div class="card">
+        <div class="ch"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg><span>TECLADO</span></div>
+        <div class="seg four" id="kbd">
+          <button type="button" data-v="0" aria-label="Apagado">OFF</button><button type="button" data-v="1" aria-label="Nivel 1">1</button><button type="button" data-v="2" aria-label="Nivel 2">2</button><button type="button" data-v="3" aria-label="Nivel 3">3</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2M11 9l-2 3h3l-2 3"/></svg><span>CARGA MÁX.</span></div>
+        <div class="seg four" id="charge">
+          <button type="button" data-v="60" aria-label="Límite 60 %">60</button><button type="button" data-v="80" aria-label="Límite 80 %">80</button><button type="button" data-v="100" aria-label="Límite 100 %">100</button><button type="button" data-v="travel" aria-label="Modo viaje: 100 % durante 7 días">✈</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 18v3M17 18v3M7 10h4v4H7zM14 10h3M14 14h3"/></svg><span>GRÁFICOS</span><span class="tag" id="gfxTag" hidden>↻ REINICIAR</span></div>
+        <div class="seg two" id="gfx">
+          <button type="button" data-v="hybrid">Híbrido</button><button type="button" data-v="igpu">Integrada</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 16l-4-4 4-4M17 8l4 4-4 4M3 12h18"/></svg><span>FN ⇄ WIN</span></div>
+        <div class="seg two" id="fn">
+          <button type="button" data-v="left">Fn izq.</button><button type="button" data-v="right">Fn der.</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <main class="main fans" id="view-fans" hidden>
+    <div class="frow">
+      <button type="button" class="switch" id="fSwitch" role="switch" aria-checked="false"><span class="trk"><span class="knob"></span></span><span class="swl">Curva propia</span></button>
+      <span class="mchip" id="fMode">AUTO</span>
+      <span class="grow"></span>
+      <button type="button" class="fbtn" id="fReset"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>De fábrica</button>
+      <button type="button" class="fbtn primary" id="fApply"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="stroke-width:2.4"><path d="M5 12l5 5L20 7"/></svg><span id="fApplyL">Aplicar</span></button>
+    </div>
+    <div class="intents" id="intents"></div>
+    <div class="charts">
+      <section class="fcard" data-fan="cpu" aria-label="Curva CPU">
+        <div class="fh"><span class="ft" style="color:var(--orange)">CPU</span><span class="grow"></span><span class="fnum">--</span><span class="frpm">--</span></div>
+        <svg class="plot" viewBox="0 0 560 300" role="img" aria-label="Curva del ventilador CPU"><g></g></svg>
+      </section>
+      <section class="fcard" data-fan="gpu" aria-label="Curva GPU">
+        <div class="fh"><span class="ft" style="color:var(--blue)">GPU</span><span class="grow"></span><span class="fnum">--</span><span class="frpm">--</span></div>
+        <svg class="plot" viewBox="0 0 560 300" role="img" aria-label="Curva del ventilador GPU"><g></g></svg>
+      </section>
+    </div>
+    <div class="assign" id="assign">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--muted)"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+    </div>
+  </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+</div>
+<script src="app.js"></script>
+<script src="fans.js"></script>
+</body>
+</html>
