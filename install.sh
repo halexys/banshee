@@ -19,10 +19,10 @@ Type=Application
 Name=Banshee
 Comment=Perfiles, ventiladores y batería de la MSI Prestige 16
 Exec=$BIN $1
-Icon=banshee
+Icon=$HOME/.local/share/icons/hicolor/128x128/apps/banshee.png
 Categories=Settings;HardwareSettings;
 Terminal=false
-StartupWMClass=banshee
+StartupWMClass=Banshee
 EOF
 }
 entry "" > "$HOME/.local/share/applications/banshee.desktop"
