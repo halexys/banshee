@@ -92,7 +92,7 @@ pub fn show_panel<R: Runtime>(app: &AppHandle<R>) {
         let sc = m.scale_factor();
         let (mx, my) = (m.position().x, m.position().y);
         let mw = m.size().width as i32;
-        let pw = (380.0 * sc) as i32;
+        let pw = (300.0 * sc) as i32;
         let x = mx + mw - pw - (12.0 * sc) as i32;
         let y = my + (40.0 * sc) as i32;
         let _ = w.set_position(tauri::PhysicalPosition::new(x, y));

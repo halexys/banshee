@@ -23,14 +23,15 @@
         "label": "panel",
         "url": "panel.html",
         "title": "Banshee Panel",
-        "width": 380,
-        "height": 560,
+        "width": 300,
+        "height": 400,
+        "transparent": true,
         "resizable": false,
         "decorations": false,
         "skipTaskbar": true,
         "alwaysOnTop": true,
         "visible": false,
-        "backgroundColor": "#0F1317"
+        "backgroundColor": "#00000000"
       }
     ],
     "security": {

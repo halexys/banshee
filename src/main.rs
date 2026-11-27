@@ -584,6 +584,10 @@ fn serve_instance<R: Runtime>(app: AppHandle<R>, l: std::os::unix::net::UnixList
                 "show" => {
                     let _ = app.run_on_main_thread(move || tray::show_main(&h));
                 }
+                "panelhide" => {
+                    let _ = app.run_on_main_thread(move || tray::hide_panel(&h));
+                    let _ = s.write_all(b"ok\n");
+                }
                 "toggle" => {
                     let _ = app.run_on_main_thread(move || tray::toggle_panel(&h));
                     let _ = s.write_all(b"ok\n");

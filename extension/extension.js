@@ -91,6 +91,18 @@ class BansheeButton extends PanelMenu.Button {
 
         // The panel window is (re)created on every show: place it the moment it appears.
         this._winId = global.display.connect('window-created', (_d, win) => this._place(win));
+        // close the panel as soon as focus goes elsewhere (once it has had focus)
+        this._focusId = global.display.connect('notify::focus-window', () => {
+            const w = this._panelWin;
+            if (!w)
+                return;
+            if (global.display.focus_window === w) {
+                this._panelFocused = true;
+            } else if (this._panelFocused) {
+                this._panelWin = null;
+                ask('panelhide').catch(() => {});
+            }
+        });
         this._poll();
         this._listen();
         this._timer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, POLL_SECONDS, () => {
@@ -169,6 +181,11 @@ class BansheeButton extends PanelMenu.Button {
             let x = Math.round(this._target.center - r.width / 2);
             x = Math.max(mon.x + 8, Math.min(x, mon.x + mon.width - r.width - 8));
             win.move_frame(true, x, Math.round(this._target.bottom + 6));
+            // give it focus from the compositor side (GNOME blocks a client from taking it),
+            // so that clicking anywhere else closes it
+            Main.activateWindow(win);
+            this._panelWin = win;
+            this._panelFocused = false;
             return true;
         };
         if (!move()) {
@@ -243,6 +260,9 @@ class BansheeButton extends PanelMenu.Button {
         this._timer = 0;
         if (this._winId)
             global.display.disconnect(this._winId);
+        if (this._focusId)
+            global.display.disconnect(this._focusId);
+        this._focusId = 0;
         this._winId = 0;
         super.destroy();
     }

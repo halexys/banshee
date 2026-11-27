@@ -1,22 +1,26 @@
-.panel-body { background: #0F1317; overflow: hidden; }
-.panel { height: 100vh; padding: 18px; display: flex; flex-direction: column; gap: 16px; border: 1px solid #232A31; }
-.ph { display: flex; align-items: center; gap: 12px; }
+/* transparent window: the rounded card is the only thing painted */
+html, body.panel-body { background: transparent !important; overflow: hidden; }
+.panel { padding: 14px; display: flex; flex-direction: column; gap: 12px; border: 1px solid #232A31; border-radius: 14px; background: #0F1317; }
+.ph { display: flex; align-items: center; gap: 10px; }
+.ph .logo { width: 34px; height: 34px; }
 .pht { display: flex; flex-direction: column; }
-.pn { font-size: 24px; font-weight: 700; color: var(--accent); }
-.ps { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.tile { background: #151B21; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 2px; }
-.tv { font-family: var(--mono); font-weight: 800; font-size: 28px; }
-.tl { font-size: 12px; font-weight: 600; letter-spacing: .08em; color: var(--muted); }
-.pp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.pp button { display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 14px; border-radius: 10px; border: 2px solid var(--line); background: var(--panel); font-size: 16px; font-weight: 700; }
-.pp button i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); flex: 0 0 12px; }
+.pn { font-size: 19px; font-weight: 700; color: var(--accent); line-height: 1.15; }
+.ps { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.tile { background: #151B21; border-radius: 9px; padding: 8px 9px; display: flex; flex-direction: column; gap: 1px; }
+.tv { font-family: var(--mono); font-weight: 800; font-size: 21px; line-height: 1.1; }
+.tl { font-size: 10px; font-weight: 600; letter-spacing: .08em; color: var(--muted); }
+.pp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.pp button { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 10px; border-radius: 9px; border: 2px solid var(--line); background: var(--panel); font-size: 14px; font-weight: 700; white-space: nowrap; }
+.pp button i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: 0 0 10px; }
 .pp button.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); }
-.pboost { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 16px; border-radius: 10px; border: 2px solid var(--line); background: var(--panel); font-size: 17px; font-weight: 700; }
+.pboost { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; border-radius: 9px; border: 2px solid var(--line); background: var(--panel); font-size: 15px; font-weight: 700; }
+.pboost svg { width: 22px; height: 22px; }
 .pboost b { font-family: var(--mono); }
 .pboost.on { border-color: var(--orange); background: var(--orange); color: #14100B; }
-.pf { display: flex; gap: 8px; border-top: 1px solid var(--line); padding-top: 14px; }
-.pf button { height: 44px; border-radius: 8px; border: 1px solid var(--line2); background: var(--panel); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; }
+.pf { display: flex; gap: 6px; border-top: 1px solid var(--line); padding-top: 12px; }
+.pf button { height: 38px; border-radius: 8px; border: 1px solid var(--line2); background: var(--panel); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 14px; }
+.pf button svg { width: 18px; height: 18px; }
 #popen { flex: 1; }
-.pf .panic { width: 56px; border-color: #5A2A2A; background: #1C1213; color: var(--red); }
+.pf .panic { width: 48px; border-color: #5A2A2A; background: #1C1213; color: var(--red); }
 [hidden] { display: none !important; }

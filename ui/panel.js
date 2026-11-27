@@ -50,3 +50,15 @@ document.addEventListener("keydown", (e) => {
   else if (e.key >= "1" && e.key <= "4") act("set_profile", { id: P[Number(e.key) - 1] });
   else if (e.key === "b" || e.key === "B") act("set_boost", { on: !view?.status.cooler_boost });
 });
+
+// the window takes exactly the card's size (no empty space under it)
+let lastH = 0;
+function fit() {
+  const h = Math.ceil(document.querySelector(".panel").getBoundingClientRect().height);
+  if (!h || h === lastH) return;
+  lastH = h;
+  const { getCurrentWindow } = window.__TAURI__.window;
+  const { LogicalSize } = window.__TAURI__.dpi;
+  getCurrentWindow().setSize(new LogicalSize(300, h)).catch(() => {});
+}
+new ResizeObserver(fit).observe(document.querySelector(".panel"));
